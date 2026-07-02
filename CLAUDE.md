@@ -89,15 +89,19 @@ raw seed (32 байта) в base64, публичный — raw verify key (32 б
 
 ## Карта файлов
 
+Репозиторий `est-verify` (GitHub Pages, домен `est.com.kz` через `CNAME`) — общий
+дом для генератора и будущего веб-верификатора, оба на корне репозитория:
+
 ```
-est-cert/
-  README.md                     # пользовательский гайд (установка, запуск, безопасность)
+(корень репозитория est-verify)
+  index.html                    # заглушка веб-верификатора (страница в разработке)
+  CNAME                         # est.com.kz — домен GitHub Pages
+  README.md                     # пользовательский гайд генератора (установка, запуск, безопасность)
   CLAUDE.md                     # этот файл
   .gitignore                    # keys/, *.key, input/, output/, __pycache__/, .venv/, .pytest_cache/
   docs/superpowers/
     specs/2026-07-02-est-cert-generator-design.md   # исходная дизайн-спека
     plans/2026-07-02-est-cert-generator.md          # пошаговый план (11 задач)
-  .superpowers/sdd/               # task-N-brief.md / task-N-report.md по каждой задаче
   generator/
     generate.py                  # CLI-вход: --genkey / --check / --preview [N] / --compact / батч
     verify_token.py              # standalone: decode token/URL + verify подпись публичным ключом
@@ -123,10 +127,13 @@ est-cert/
     output/                      # GITIGNORED — готовые именные PDF (ПДн)
 ```
 
-Примечание: дизайн-спека предусматривает отдельный каталог `verifier/`
-(веб-страница проверки подписи по фрагменту URL) как отдельный бриф вне этого
-плана — на момент завершения текущего 11-задачного плана каталог не создан и
-в репозитории отсутствует.
+Примечание: дизайн-спека изначально предусматривала отдельный подкаталог
+`verifier/` для веб-страницы проверки подписи — по факту эта страница уже
+живёт на корне репозитория (`index.html` + `CNAME`, раздаётся GitHub Pages по
+домену `est.com.kz`) как отдельный проект `est-verify`, в который генератор
+и был влит. Сейчас `index.html` — заглушка «страница в разработке»;
+реализация проверки подписи (JS + PyNaCl-совместимый tweetnacl.js, разбор
+токена из `location.hash`) — отдельный бриф вне текущего 11-задачного плана.
 
 ## Режимы CLI (`generate.py`)
 
@@ -163,7 +170,9 @@ est-cert/
   безопасен для распространения — он нужен веб-верификатору и
   `verify_token.py`.
 - `generator/input/template.pdf`, `generator/input/students.xlsx` — реальные
-  данные заказчика (ПДн выпускников). Гитигнорится (`input/`).
+  данные заказчика (ПДн выпускников). Гитигнорится (`input/`). Пустой шаблон
+  сертификата (`template.pdf`) уже положен локально; `students.xlsx` — нет,
+  его нужно подготовить/получить от заказчика перед батчем.
 - `generator/output/*.pdf` — сгенерированные именные сертификаты (тоже ПДн).
   Гитигнорится (`output/`).
 - `.gitignore` (корень репозитория) закрывает: `keys/`, `*.key`, `input/`,
@@ -183,9 +192,8 @@ source .venv/bin/activate
 python -m pytest -q
 ```
 
-41 тест на момент финальной задачи плана (token, keys, config, table,
-validate, qr, render, pipeline, cli), все зелёные. `estcert/`-модули в этой
-задаче не менялись — набор тестов и их результат не затронуты.
+44 теста на момент слияния в этот репозиторий (token, keys, config, table,
+validate, qr, render, pipeline, cli), все зелёные.
 
 Юнит-тесты не требуют реальных файлов заказчика: fixtures в `tests/conftest.py`
 и по месту в тестах создают синтетические PDF/xlsx через `fitz`/`openpyxl`.
