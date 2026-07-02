@@ -1,0 +1,23 @@
+domain: est.com.kz
+course_name: "Евразийская школа трекинга"   # входит в подписанный payload
+course_code: "E"                             # используется при --compact
+compact_course: false                        # true → в QR короткий код вместо названия
+
+template_pdf: ./input/template.pdf
+table_path: ./input/students.xlsx
+output_dir: ./output
+font_file: ./assets/DejaVuSans.ttf           # кириллический TTF для ФИО
+
+keys:
+  private: ./keys/ed25519_private.key   # ТОЛЬКО локально, на сервер заказчика не копировать
+  public:  ./keys/ed25519_public.key
+
+columns:            # маппинг наших полей на заголовки в таблице заказчика
+  fio: "ФИО"
+  date: "Дата выдачи"
+  number: "Номер"
+
+placement:          # координаты на шаблоне (точки PDF, начало — верхний левый угол)
+  fio:  { x: 300, y: 250, fontsize: 18, fio_min_fontsize: 10, max_width: 260, color: "#000000" }
+  qr:   { x: 450, y: 600, size: 90 }              # 90 pt ≈ 3.2 см (>= 3 см)
+  verify_label: { x: 450, y: 695, fontsize: 8, font: "helv" }
