@@ -11,11 +11,8 @@ REQUIRED_TOP = [
 
 
 def load_config(path: str) -> dict:
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
-    except yaml.YAMLError as e:
-        raise ValueError(f"Ошибка парсинга конфига: {e}")
+    with open(path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
 
     errors = []
     for key in REQUIRED_TOP:

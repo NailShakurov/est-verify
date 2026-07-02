@@ -42,9 +42,7 @@ def test_missing_key_raises(tmp_path):
 
 def test_separator_in_course_name_raises(tmp_path):
     p = tmp_path / "config.yaml"
-    p.write_text(VALID.replace('course_name: "Курс"', 'course_name: "Ку\\x1fрс"'))
-    # инъекция реального U+001F через python-yaml не тривиальна: подставим напрямую
-    text = p.read_text().replace("Ку\\x1fрс", "Ку\x1fрс")
-    p.write_text(text)
+    # Use YAML's \u escape syntax so YAML parses it and validation catches UNIT_SEP
+    p.write_text(VALID.replace('course_name: "Курс"', 'course_name: "Ку\\u001fрс"'))
     with pytest.raises(ValueError):
         cfg.load_config(str(p))
