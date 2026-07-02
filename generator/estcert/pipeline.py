@@ -2,6 +2,7 @@
 import os
 import warnings
 
+from estcert import keys
 from estcert import qr as qrmod
 from estcert import render
 from estcert import token as tk
@@ -14,7 +15,6 @@ def course_for(config: dict, compact: bool) -> str:
 def build_token_for_row(sk, config: dict, row: dict, compact: bool):
     course = course_for(config, compact)
     payload = tk.build_payload(row["number"], row["fio"], course, row["date_iso"])
-    from estcert import keys
     signature = keys.sign(sk, payload)
     token = tk.build_token(payload, signature)
     url = tk.build_url(config["domain"], token)
@@ -23,18 +23,12 @@ def build_token_for_row(sk, config: dict, row: dict, compact: bool):
 
 
 def generate_one(sk, config: dict, row: dict, compact: bool) -> dict:
-    course = course_for(config, compact)
-    payload = tk.build_payload(row["number"], row["fio"], course, row["date_iso"])
-    from estcert import keys
-    signature = keys.sign(sk, payload)
-    token = tk.build_token(payload, signature)
-    url = tk.build_url(config["domain"], token)
+    token, url, version = build_token_for_row(sk, config, row, compact)
 
-    q = qrmod.make_qr(url)
-    version = qrmod.qr_version(q)
     if version > 10:
         warnings.warn(f"QR версии {version} > 10 для {row['number']} — проверьте читаемость")
 
+    q = qrmod.make_qr(url)
     png = qrmod.qr_png_bytes(q, target_pt=config["placement"]["qr"]["size"])
 
     os.makedirs(config["output_dir"], exist_ok=True)
