@@ -46,3 +46,12 @@ def test_separator_in_course_name_raises(tmp_path):
     p.write_text(VALID.replace('course_name: "Курс"', 'course_name: "Ку\\u001fрс"'))
     with pytest.raises(ValueError):
         cfg.load_config(str(p))
+
+
+def test_malformed_yaml_raises_value_error(tmp_path):
+    p = tmp_path / "config.yaml"
+    # Write malformed YAML (unclosed bracket)
+    p.write_text("domain: est.com.kz\ncourse_name: [unclosed")
+    with pytest.raises(ValueError) as e:
+        cfg.load_config(str(p))
+    assert "парсинга" in str(e.value)
