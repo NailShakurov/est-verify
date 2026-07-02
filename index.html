@@ -1,10 +1,231 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Евразийская школа трекинга — проверка сертификата</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проверка сертификата — Eurasian Tracking School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl-fast.min.js"></script>
+<style>
+  :root {
+    --bg-dark: #000036;
+    --bg-medium: #262A72;
+    --accent: #29378D;
+    --bg-card: #FFFFFF;
+    --text-dark: #000000;
+    --text-light: #FFFFFF;
+    --ok: #2E7D32;
+    --fail: #C62828;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg-dark);
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 540px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(38, 42, 114, 0.6);
+  }
+
+  .card__header {
+    background: var(--bg-medium);
+    color: var(--text-light);
+    padding: 20px 28px;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.03em;
+  }
+
+  .card__body {
+    padding: 28px;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .status--ok { color: var(--ok); }
+  .status--fail { color: var(--fail); }
+  .status--neutral { color: var(--accent); }
+
+  .status__icon {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .status__text p {
+    margin: 4px 0 0;
+    font-weight: 400;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .field__label {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 2px;
+  }
+
+  .field__value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .card__footer {
+    padding: 16px 28px;
+    font-size: 13px;
+    color: var(--accent);
+    border-top: 1px solid #eee;
+  }
+</style>
 </head>
 <body>
-  <p>Система проверки сертификатов. Страница в разработке.</p>
+  <div class="card">
+    <div class="card__header">EURASIAN TRACKING SCHOOL</div>
+    <div class="card__body" id="body"></div>
+    <div class="card__footer">Проверка подлинности: est.com.kz</div>
+  </div>
+
+<script>
+// Публичный ключ Ed25519 генератора, base64 (см. README — как заменить).
+const PUBLIC_KEY_B64 = "Wbyy4/P5Kx28VtHlIWDg5sHnnK96ESdTmHKIk6SN7jU=";
+
+function base64urlDecode(str) {
+  let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function formatDate(isoDate) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!m) return isoDate;
+  const [, y, mo, d] = m;
+  return `${d}.${mo}.${y}`;
+}
+
+function render(state, data) {
+  const body = document.getElementById('body');
+
+  if (state === 'no_token') {
+    body.innerHTML = `
+      <div class="status status--neutral">
+        <span class="status__icon">ℹ</span>
+        <div class="status__text">Для проверки сертификата отсканируйте QR-код с документа.</div>
+      </div>`;
+    return;
+  }
+
+  if (state === 'parse_error') {
+    body.innerHTML = `
+      <div class="status status--fail">
+        <span class="status__icon">✗</span>
+        <div class="status__text">Ошибка проверки
+          <p>Не удалось прочитать данные сертификата. Проверьте, что QR-код считан полностью.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (state === 'invalid') {
+    body.innerHTML = `
+      <div class="status status--fail">
+        <span class="status__icon">✗</span>
+        <div class="status__text">Сертификат недействителен
+          <p>Подпись не прошла проверку. Данный документ является поддельным или был изменён.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // state === 'valid'
+  body.innerHTML = `
+    <div class="status status--ok">
+      <span class="status__icon">✓</span>
+      <div class="status__text">Сертификат подлинный</div>
+    </div>
+    <div class="fields">
+      <div>
+        <div class="field__label">№ сертификата</div>
+        <div class="field__value">${data.certNum}</div>
+      </div>
+      <div>
+        <div class="field__label">Владелец</div>
+        <div class="field__value">${data.fio}</div>
+      </div>
+      <div>
+        <div class="field__label">Курс</div>
+        <div class="field__value">${data.course}</div>
+      </div>
+      <div>
+        <div class="field__label">Дата выдачи</div>
+        <div class="field__value">${formatDate(data.dateIso)}</div>
+      </div>
+    </div>`;
+}
+
+function verify() {
+  const hash = location.hash.slice(1);
+  if (!hash) {
+    render('no_token');
+    return;
+  }
+
+  try {
+    const [payloadB64, sigB64] = hash.split('.');
+    if (!payloadB64 || !sigB64) throw new Error('malformed token');
+
+    const payload = base64urlDecode(payloadB64);
+    const sig = base64urlDecode(sigB64);
+    const pubkey = base64urlDecode(PUBLIC_KEY_B64);
+
+    const fields = new TextDecoder().decode(payload).split('\x1f');
+    if (fields.length !== 4) throw new Error('malformed payload');
+    const [certNum, fio, course, dateIso] = fields;
+
+    const valid = nacl.sign.detached.verify(payload, sig, pubkey);
+    if (!valid) {
+      render('invalid');
+      return;
+    }
+
+    render('valid', { certNum, fio, course, dateIso });
+  } catch (e) {
+    render('parse_error');
+  }
+}
+
+verify();
+window.addEventListener('hashchange', verify);
+</script>
 </body>
 </html>

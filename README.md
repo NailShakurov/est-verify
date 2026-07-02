@@ -44,3 +44,19 @@ python verify_token.py "<URL или токен>" --public ./keys/ed25519_public.
 ```bash
 python -m pytest -q
 ```
+
+## Верификатор (`index.html`)
+
+Статическая страница проверки подлинности сертификата — QR ведёт на
+`https://est.com.kz/#<token>`, страница разбирает токен из фрагмента URL и
+проверяет Ed25519-подпись прямо в браузере (tweetnacl.js, без бэкенда).
+
+Перед деплоем нужно один раз вставить публичный ключ: открыть
+`index.html`, найти константу
+
+```javascript
+const PUBLIC_KEY_B64 = "REPLACE_WITH_ed25519_public.key_CONTENTS";
+```
+
+и заменить значение на содержимое файла `generator/keys/ed25519_public.key`
+(одна строка base64, без переноса строки в конце).
