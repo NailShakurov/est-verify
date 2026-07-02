@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """EST — генератор именных сертификатов с подписанным QR. CLI-вход."""
 import argparse
+import os
 import sys
 
 from estcert import config as cfgmod
@@ -60,6 +61,14 @@ def main(argv=None) -> int:
         return 0
 
     # preview / batch
+    # Check for template_pdf and font_file existence before entering generation
+    if not os.path.exists(config["template_pdf"]):
+        print(f"Файл шаблона не найден: {config['template_pdf']}", file=sys.stderr)
+        return 1
+    if not os.path.exists(config["font_file"]):
+        print(f"Файл шрифта не найден: {config['font_file']}", file=sys.stderr)
+        return 1
+
     try:
         sk = keys.load_signing_key(config["keys"]["private"])
     except FileNotFoundError:
@@ -80,10 +89,14 @@ def main(argv=None) -> int:
     todo = clean[: args.preview] if args.preview is not None else clean
     print(f"Генерирую {len(todo)} сертификат(ов){' (compact)' if compact else ''}...")
     max_ver = 0
-    for row in todo:
-        res = pipeline.generate_one(sk, config, row, compact)
-        max_ver = max(max_ver, res["qr_version"])
-        print(f"  ✓ {res['path']} (QR v{res['qr_version']})")
+    try:
+        for row in todo:
+            res = pipeline.generate_one(sk, config, row, compact)
+            max_ver = max(max_ver, res["qr_version"])
+            print(f"  ✓ {res['path']} (QR v{res['qr_version']})")
+    except Exception as e:
+        print(f"Ошибка при генерации сертификата: {e}", file=sys.stderr)
+        return 1
     print(f"Готово. Максимальная версия QR: {max_ver}.")
     if max_ver > 10:
         print("ПРЕДУПРЕЖДЕНИЕ: версия QR > 10 — протестируйте печать+скан!")

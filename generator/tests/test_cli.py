@@ -83,3 +83,84 @@ def test_preview_limits_count(tmp_path):
     rc = generate.main(["--config", cfg, "--preview", "1"])
     assert rc == 0
     assert len(list(outdir.glob("*.pdf"))) == 1
+
+
+def test_missing_template_pdf_batch(tmp_path, capsys):
+    """Test that batch mode with missing template_pdf prints clean error and returns 1."""
+    table = str(tmp_path / "s.xlsx")
+    _make_table(table, [["001", "Иванов Иван", "2026-07-02"]])
+    kd = tmp_path / "k"; outdir = tmp_path / "out"
+    missing_template = str(tmp_path / "nonexistent.pdf")
+    cfg = _write_config(tmp_path, missing_template, table, str(kd), str(outdir))
+    # Generate keys first
+    generate.main(["--config", cfg, "--genkey"])
+    # Run batch mode with missing template
+    rc = generate.main(["--config", cfg])
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "Файл шаблона не найден" in captured.err
+    assert "nonexistent.pdf" in captured.err
+    assert "Traceback" not in captured.err  # No Python traceback
+
+
+def test_missing_template_pdf_preview(tmp_path, capsys):
+    """Test that preview mode with missing template_pdf prints clean error and returns 1."""
+    table = str(tmp_path / "s.xlsx")
+    _make_table(table, [["001", "Иванов Иван", "2026-07-02"]])
+    kd = tmp_path / "k"; outdir = tmp_path / "out"
+    missing_template = str(tmp_path / "nonexistent.pdf")
+    cfg = _write_config(tmp_path, missing_template, table, str(kd), str(outdir))
+    # Generate keys first
+    generate.main(["--config", cfg, "--genkey"])
+    # Run preview mode with missing template
+    rc = generate.main(["--config", cfg, "--preview", "1"])
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "Файл шаблона не найден" in captured.err
+    assert "nonexistent.pdf" in captured.err
+    assert "Traceback" not in captured.err  # No Python traceback
+
+
+def test_missing_font_file(tmp_path, capsys):
+    """Test that batch mode with missing font_file prints clean error and returns 1."""
+    doc = fitz.open(); doc.new_page(width=595, height=842)
+    template = str(tmp_path / "t.pdf"); doc.save(template); doc.close()
+    table = str(tmp_path / "s.xlsx")
+    _make_table(table, [["001", "Иванов Иван", "2026-07-02"]])
+    kd = tmp_path / "k"; outdir = tmp_path / "out"
+    missing_font = str(tmp_path / "nonexistent.ttf")
+    cfg = _write_config(tmp_path, template, table, str(kd), str(outdir))
+    # Manually write config with missing font file
+    cfg_text = f"""
+domain: est.com.kz
+course_name: "Евразийская школа трекинга"
+course_code: "E"
+compact_course: false
+template_pdf: {template}
+table_path: {table}
+output_dir: {outdir}
+font_file: {missing_font}
+keys:
+  private: {kd}/priv.key
+  public: {kd}/pub.key
+columns:
+  fio: "ФИО"
+  date: "Дата выдачи"
+  number: "Номер"
+placement:
+  fio: {{x: 300, y: 250, fontsize: 18, fio_min_fontsize: 10, max_width: 260, color: "#000000"}}
+  qr: {{x: 450, y: 600, size: 90}}
+  verify_label: {{x: 450, y: 695, fontsize: 8, font: "helv"}}
+"""
+    cfg_path = str(tmp_path / "config_bad_font.yaml")
+    with open(cfg_path, "w") as f:
+        f.write(cfg_text)
+    # Generate keys first
+    generate.main(["--config", cfg_path, "--genkey"])
+    # Run batch mode with missing font
+    rc = generate.main(["--config", cfg_path])
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert "Файл шрифта не найден" in captured.err
+    assert "nonexistent.ttf" in captured.err
+    assert "Traceback" not in captured.err  # No Python traceback
