@@ -5,7 +5,7 @@ from estcert.token import UNIT_SEP
 
 REQUIRED_TOP = [
     "domain", "course_name", "course_code", "compact_course",
-    "template_pdf", "table_path", "output_dir", "font_file",
+    "template_pdf", "table_path", "output_dir", "font_path",
     "keys", "columns", "placement",
 ]
 

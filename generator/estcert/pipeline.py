@@ -36,6 +36,7 @@ def generate_one(sk, config: dict, row: dict, compact: bool) -> dict:
     out_path = os.path.join(config["output_dir"], fname)
     render.render_certificate(
         config["template_pdf"], out_path, row["fio"], png,
-        config["placement"], config["font_file"], config["domain"],
+        config["placement"], config["font_path"], config["domain"],
+        row["date_iso"], row["number"],
     )
     return {"path": out_path, "qr_version": version, "url": url}

@@ -14,7 +14,7 @@ compact_course: false
 template_pdf: {template}
 table_path: {table}
 output_dir: {outdir}
-font_file: assets/DejaVuSans.ttf
+font_path: assets/DejaVuSans.ttf
 keys:
   private: {keysdir}/priv.key
   public: {keysdir}/pub.key
@@ -23,9 +23,11 @@ columns:
   date: "Дата выдачи"
   number: "Номер"
 placement:
-  fio: {{x: 300, y: 250, fontsize: 18, fio_min_fontsize: 10, max_width: 260, color: "#000000"}}
-  qr: {{x: 450, y: 600, size: 90}}
-  verify_label: {{x: 450, y: 695, fontsize: 8, font: "helv"}}
+  fio: {{rect: [59, 430, 767, 487], fontsize: 32, color: [0.1, 0.1, 0.5]}}
+  date: {{x: 120, y: 828, fontsize: 15, color: [0, 0, 0]}}
+  cert_num: {{x: 400, y: 960, fontsize: 13, color: [0.3, 0.3, 0.3]}}
+  qr: {{x: 570, y: 800, size: 180}}
+  verify_label: {{x: 570, y: 994, fontsize: 15, color: [0.2, 0.2, 0.6]}}
 """
     p = tmp_path / "config.yaml"
     p.write_text(cfg)
@@ -122,14 +124,13 @@ def test_missing_template_pdf_preview(tmp_path, capsys):
 
 
 def test_missing_font_file(tmp_path, capsys):
-    """Test that batch mode with missing font_file prints clean error and returns 1."""
+    """Test that batch mode with missing font_path prints clean error and returns 1."""
     doc = fitz.open(); doc.new_page(width=595, height=842)
     template = str(tmp_path / "t.pdf"); doc.save(template); doc.close()
     table = str(tmp_path / "s.xlsx")
     _make_table(table, [["001", "Иванов Иван", "2026-07-02"]])
     kd = tmp_path / "k"; outdir = tmp_path / "out"
     missing_font = str(tmp_path / "nonexistent.ttf")
-    cfg = _write_config(tmp_path, template, table, str(kd), str(outdir))
     # Manually write config with missing font file
     cfg_text = f"""
 domain: est.com.kz
@@ -139,7 +140,7 @@ compact_course: false
 template_pdf: {template}
 table_path: {table}
 output_dir: {outdir}
-font_file: {missing_font}
+font_path: {missing_font}
 keys:
   private: {kd}/priv.key
   public: {kd}/pub.key
@@ -148,9 +149,11 @@ columns:
   date: "Дата выдачи"
   number: "Номер"
 placement:
-  fio: {{x: 300, y: 250, fontsize: 18, fio_min_fontsize: 10, max_width: 260, color: "#000000"}}
-  qr: {{x: 450, y: 600, size: 90}}
-  verify_label: {{x: 450, y: 695, fontsize: 8, font: "helv"}}
+  fio: {{rect: [59, 430, 767, 487], fontsize: 32, color: [0.1, 0.1, 0.5]}}
+  date: {{x: 120, y: 828, fontsize: 15, color: [0, 0, 0]}}
+  cert_num: {{x: 400, y: 960, fontsize: 13, color: [0.3, 0.3, 0.3]}}
+  qr: {{x: 570, y: 800, size: 180}}
+  verify_label: {{x: 570, y: 994, fontsize: 15, color: [0.2, 0.2, 0.6]}}
 """
     cfg_path = str(tmp_path / "config_bad_font.yaml")
     with open(cfg_path, "w") as f:

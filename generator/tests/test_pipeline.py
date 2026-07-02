@@ -21,11 +21,13 @@ def setup(tmp_path):
         "course_code": "E",
         "template_pdf": str(template),
         "output_dir": str(tmp_path / "out"),
-        "font_file": "assets/DejaVuSans.ttf",
+        "font_path": "assets/DejaVuSans.ttf",
         "placement": {
-            "fio": {"x": 300, "y": 250, "fontsize": 18, "fio_min_fontsize": 10, "max_width": 260, "color": "#000000"},
-            "qr": {"x": 450, "y": 600, "size": 90},
-            "verify_label": {"x": 450, "y": 695, "fontsize": 8, "font": "helv"},
+            "fio": {"rect": [59, 430, 767, 487], "fontsize": 32, "color": [0.1, 0.1, 0.5]},
+            "date": {"x": 120, "y": 828, "fontsize": 15, "color": [0, 0, 0]},
+            "cert_num": {"x": 400, "y": 960, "fontsize": 13, "color": [0.3, 0.3, 0.3]},
+            "qr": {"x": 570, "y": 800, "size": 180},
+            "verify_label": {"x": 570, "y": 994, "fontsize": 15, "color": [0.2, 0.2, 0.6]},
         },
     }
     row = {"number": "001", "fio": "Иванов Иван", "date_iso": "2026-07-02", "row": 2}

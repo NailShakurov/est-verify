@@ -61,12 +61,12 @@ def main(argv=None) -> int:
         return 0
 
     # preview / batch
-    # Check for template_pdf and font_file existence before entering generation
+    # Check for template_pdf and font_path existence before entering generation
     if not os.path.exists(config["template_pdf"]):
         print(f"Файл шаблона не найден: {config['template_pdf']}", file=sys.stderr)
         return 1
-    if not os.path.exists(config["font_file"]):
-        print(f"Файл шрифта не найден: {config['font_file']}", file=sys.stderr)
+    if not os.path.exists(config["font_path"]):
+        print(f"Файл шрифта не найден: {config['font_path']}", file=sys.stderr)
         return 1
 
     try:
